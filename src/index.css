@@ -23,7 +23,7 @@ body {
 
 /* Dark mode background handled when html has .dark class */
 html.dark body {
-  background-color: #0b0f1a; /* near-black for true dark */
+  background-color: #000000; /* pure black for true dark */
   color: #e5e7eb; /* gray-200 */
 }
 

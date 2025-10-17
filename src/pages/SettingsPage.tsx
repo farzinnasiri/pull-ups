@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useStore } from '@/store'
-import { Settings, Download, Upload, Trash2, Moon, Sun, Volume2, VolumeX, Vibrate } from 'lucide-react'
+import { Settings, Download, Upload, Trash2, Moon, Sun, Volume2, VolumeX } from 'lucide-react'
 import { toast } from 'sonner'
 
 const SettingsPage = () => {
@@ -12,9 +12,13 @@ const SettingsPage = () => {
   }
 
   const handleThemeToggle = () => {
-    const newTheme = settings.theme === 'light' ? 'dark' : 'light'
+    const newTheme = settings.theme === 'dark' ? 'light' : 'dark'
     updateSettings({ ...settings, theme: newTheme })
-    document.documentElement.classList.toggle('dark', newTheme === 'dark')
+    // Persist theme for useTheme hook
+    localStorage.setItem('theme', newTheme)
+    // Apply classes to <html>
+    document.documentElement.classList.remove('light', 'dark')
+    document.documentElement.classList.add(newTheme)
   }
 
   const handleSoundToggle = () => {
@@ -121,16 +125,12 @@ const SettingsPage = () => {
               </div>
               <button
                 onClick={handleSoundToggle}
-                className={`p-2 rounded-lg transition-colors ${
-                  settings.soundEnabled
-                    ? 'bg-blue-600 text-white hover:bg-blue-700'
-                    : 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-500'
-                }`}
+                className={`px-3 py-1 rounded-full text-sm font-medium ${settings.soundEnabled ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' : 'bg-gray-200 text-gray-700 dark:bg-gray-600 dark:text-gray-300'}`}
               >
                 {settings.soundEnabled ? (
-                  <Volume2 className="w-5 h-5" />
+                  <span className="flex items-center"><Volume2 className="w-4 h-4 mr-1" /> On</span>
                 ) : (
-                  <VolumeX className="w-5 h-5" />
+                  <span className="flex items-center"><VolumeX className="w-4 h-4 mr-1" /> Off</span>
                 )}
               </button>
             </div>
@@ -139,20 +139,16 @@ const SettingsPage = () => {
           <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
             <div className="flex justify-between items-center">
               <div>
-                <div className="font-medium text-gray-900 dark:text-white">Vibration Alert</div>
+                <div className="font-medium text-gray-900 dark:text-white">Vibration</div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">
-                  Vibrate device when rest timer finishes
+                  Vibrate when rest timer finishes
                 </div>
               </div>
               <button
                 onClick={handleVibrationToggle}
-                className={`p-2 rounded-lg transition-colors ${
-                  settings.vibrationEnabled
-                    ? 'bg-green-600 text-white hover:bg-green-700'
-                    : 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-500'
-                }`}
+                className={`px-3 py-1 rounded-full text-sm font-medium ${settings.vibrationEnabled ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' : 'bg-gray-200 text-gray-700 dark:bg-gray-600 dark:text-gray-300'}`}
               >
-                <Vibrate className="w-5 h-5" />
+                {settings.vibrationEnabled ? 'On' : 'Off'}
               </button>
             </div>
           </div>
@@ -162,23 +158,22 @@ const SettingsPage = () => {
       {/* Appearance */}
       <div className="mb-8">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Appearance</h2>
-        
         <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
           <div className="flex justify-between items-center">
             <div>
-              <div className="font-medium text-gray-900 dark:text-white">Dark Mode</div>
+              <div className="font-medium text-gray-900 dark:text-white">Theme</div>
               <div className="text-sm text-gray-600 dark:text-gray-400">
-                Toggle between light and dark themes
+                Toggle between light and dark mode
               </div>
             </div>
             <button
               onClick={handleThemeToggle}
-              className="p-2 rounded-lg bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors"
+              className="px-3 py-1 rounded-full text-sm font-medium bg-gray-200 text-gray-700 dark:bg-gray-600 dark:text-gray-300 flex items-center"
             >
               {settings.theme === 'dark' ? (
-                <Sun className="w-5 h-5 text-yellow-500" />
+                <span className="flex items-center"><Moon className="w-4 h-4 mr-1" /> Dark</span>
               ) : (
-                <Moon className="w-5 h-5 text-gray-700" />
+                <span className="flex items-center"><Sun className="w-4 h-4 mr-1" /> Light</span>
               )}
             </button>
           </div>
@@ -188,35 +183,56 @@ const SettingsPage = () => {
       {/* Data Management */}
       <div className="mb-8">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Data Management</h2>
-        
         <div className="space-y-3">
-          <button
-            onClick={exportData}
-            className="w-full flex items-center justify-center px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-          >
-            <Download className="w-5 h-5 mr-2" />
-            Export Data
-          </button>
-          
-          <label className="w-full flex items-center justify-center px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors cursor-pointer">
-            <Upload className="w-5 h-5 mr-2" />
-            Import Data
-            <input
-              type="file"
-              accept=".json"
-              onChange={importData}
-              className="hidden"
-            />
-          </label>
-          
-          <button
-            onClick={handleClearAllData}
-            disabled={isClearing}
-            className="w-full flex items-center justify-center px-4 py-3 bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white rounded-lg transition-colors"
-          >
-            <Trash2 className="w-5 h-5 mr-2" />
-            {isClearing ? 'Clearing...' : 'Clear All Data'}
-          </button>
+          <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+            <div className="flex justify-between items-center">
+              <div>
+                <div className="font-medium text-gray-900 dark:text-white">Export Data</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  Download your workout data as a JSON file
+                </div>
+              </div>
+              <button
+                onClick={exportData}
+                className="px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 flex items-center"
+              >
+                <Download className="w-4 h-4 mr-1" /> Export
+              </button>
+            </div>
+          </div>
+
+          <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+            <div className="flex justify-between items-center">
+              <div>
+                <div className="font-medium text-gray-900 dark:text-white">Import Data</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  Restore data from a previously exported JSON file
+                </div>
+              </div>
+              <label className="px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 flex items-center cursor-pointer">
+                <Upload className="w-4 h-4 mr-1" /> Import
+                <input type="file" accept="application/json" className="hidden" onChange={importData} />
+              </label>
+            </div>
+          </div>
+
+          <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+            <div className="flex justify-between items-center">
+              <div>
+                <div className="font-medium text-gray-900 dark:text-white">Clear All Data</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  Permanently delete all stored data
+                </div>
+              </div>
+              <button
+                onClick={handleClearAllData}
+                disabled={isClearing}
+                className="px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300 flex items-center disabled:opacity-60"
+              >
+                <Trash2 className="w-4 h-4 mr-1" /> {isClearing ? 'Clearing...' : 'Clear'}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 

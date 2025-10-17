@@ -8,9 +8,12 @@ import HistoryPage from './pages/HistoryPage'
 import ProgressPage from './pages/ProgressPage'
 import SettingsPage from './pages/SettingsPage'
 import Navigation from './components/Navigation'
+import { useTheme } from './hooks/useTheme'
 
 function App() {
   const { loadData } = useStore()
+  // Ensure saved theme is applied on startup
+  useTheme()
 
   useEffect(() => {
     loadData()
@@ -18,7 +21,7 @@ function App() {
 
   return (
     <BrowserRouter>
-      <div className="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+      <div className="min-h-screen bg-white dark:bg-black text-gray-900 dark:text-gray-100">
         <div className="max-w-md mx-auto min-h-screen">
           <main className="pt-safe pb-24">
             <Routes>

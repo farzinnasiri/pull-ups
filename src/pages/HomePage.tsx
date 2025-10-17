@@ -183,7 +183,7 @@ const HomePage = () => {
       {/* New Session Modal */}
       {showNewSessionModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-sm">
+          <div className="bg-white dark:bg-black rounded-lg p-6 w-full max-w-sm">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">New Workout Session</h3>
             
             <div className="mb-4">

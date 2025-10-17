@@ -11,7 +11,10 @@ const Navigation = () => {
   ]
 
   return (
-    <nav className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-md bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+    <nav
+      className="fixed left-1/2 transform -translate-x-1/2 w-full max-w-md bg-white dark:bg-black border-t border-gray-200 dark:border-gray-800 pb-safe z-50"
+      style={{ bottom: 'var(--safe-bottom)' }}
+    >
       <div className="flex justify-around py-2">
         {navItems.map(({ icon: Icon, label, page, path }) => (
           <NavLink

@@ -16,7 +16,7 @@ const WorkoutPage = () => {
     reps: 0,
     weight: 0,
     bandResistance: 0,
-    proximityToFailure: 8.0,
+    proximityToFailure: 6.0,
     restTime: settings.defaultRestTime
   })
 
@@ -95,7 +95,7 @@ const WorkoutPage = () => {
       reps: 0,
       weight: 0,
       bandResistance: 0,
-      proximityToFailure: 8.0,
+      proximityToFailure: 6.0,
       restTime: settings.defaultRestTime
     })
   }
@@ -134,6 +134,28 @@ const WorkoutPage = () => {
     setActiveSession(null)
     toast.success('Workout session completed! 🎉')
     navigate('/')
+  }
+
+  // Lock background scroll when modal is open (Android keyboard friendly)
+  useEffect(() => {
+    if (showSetModal) {
+      const prevHtmlOverflow = document.documentElement.style.overflow
+      const prevBodyOverflow = document.body.style.overflow
+      document.documentElement.style.overflow = 'hidden'
+      document.body.style.overflow = 'hidden'
+      return () => {
+        document.documentElement.style.overflow = prevHtmlOverflow
+        document.body.style.overflow = prevBodyOverflow
+      }
+    }
+  }, [showSetModal])
+
+  const scrollIntoViewIfNeeded = (el: HTMLElement) => {
+    setTimeout(() => {
+      try {
+        el.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+      } catch {}
+    }, 100)
   }
 
   const getExerciseName = () => {
@@ -224,60 +246,75 @@ const WorkoutPage = () => {
         </div>
 
         {activeSession.sets.length > 0 ? (
-          <div className="space-y-3">
-            {activeSession.sets.map((set: ExerciseSet, index: number) => (
-              <div key={set.id} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                <div className="flex justify-between items-start mb-2">
-                  <div>
-                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                      Set {index + 1}
-                    </span>
-                    <div className="text-xl font-bold text-gray-900 dark:text-white">
-                      {set.reps} reps
-                    </div>
-                  </div>
-                  {!activeSession.completed && (
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => {
-                          setEditingSet(set)
-                          setCurrentSet({
-                            reps: set.reps,
-                            weight: set.weight || 0,
-                            bandResistance: set.bandResistance || 0,
-                            proximityToFailure: set.proximityToFailure,
-                            restTime: set.restTime
-                          })
-                          setShowSetModal(true)
-                        }}
-                        className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                      >
-                        <Edit3 className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => deleteSet(set.id)}
-                        className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+          <div className="rounded-xl overflow-hidden border border-gray-200 dark:border-gray-800">
+            <div className={"grid " + ((activeSession.variation === 'weighted' || activeSession.variation === 'band') ? 'grid-cols-4' : 'grid-cols-3') + " bg-gray-100 dark:bg-black/40 text-xs font-medium text-gray-600 dark:text-gray-400 px-4 py-2"}>
+              <div>Set</div>
+              {(activeSession.variation === 'weighted' || activeSession.variation === 'band') && (
+                <div>{activeSession.variation === 'weighted' ? 'Weight' : 'Assist'}</div>
+              )}
+              <div>Reps</div>
+              <div>RPE</div>
+            </div>
+            <div className="divide-y divide-gray-200 dark:divide-gray-800">
+              {activeSession.sets.map((set: ExerciseSet, index: number) => (
+                <div key={set.id} className={"grid " + ((activeSession.variation === 'weighted' || activeSession.variation === 'band') ? 'grid-cols-4' : 'grid-cols-3') + " items-center px-4 py-3 bg-white dark:bg-black"}>
+                  <div className="text-gray-900 dark:text-white font-medium">{index + 1}</div>
+                  {(activeSession.variation === 'weighted' || activeSession.variation === 'band') && (
+                    <div className="text-gray-900 dark:text-white">
+                      {activeSession.variation === 'weighted' ? (set.weight ?? 0) : (set.bandResistance ?? 0)}
+                      <span className="ml-1 text-xs text-gray-600 dark:text-gray-400">kg</span>
                     </div>
                   )}
+                  <div className="text-gray-900 dark:text-white">{set.reps}</div>
+                  <div className="flex items-center justify-between">
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-xs font-medium">
+                      {set.proximityToFailure}
+                    </span>
+                    {!activeSession.completed && (
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => {
+                            setEditingSet(set)
+                            setCurrentSet({
+                              reps: set.reps,
+                              weight: set.weight || 0,
+                              bandResistance: set.bandResistance || 0,
+                              proximityToFailure: Math.max(6, Math.min(10, set.proximityToFailure)),
+                              restTime: set.restTime
+                            })
+                            setShowSetModal(true)
+                          }}
+                          className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                        >
+                          <Edit3 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => deleteSet(set.id)}
+                          className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                
-                <div className="flex flex-wrap gap-3 text-sm text-gray-600 dark:text-gray-400">
-                  {set.weight && <span>Weight: {set.weight}kg</span>}
-                  {set.bandResistance && <span>Band: {set.bandResistance}kg</span>}
-                  <span>RPE: {set.proximityToFailure}/10</span>
-                  <span>Rest: {set.restTime}s</span>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         ) : (
           <div className="text-center py-8 text-gray-500 dark:text-gray-400">
             <Plus className="w-12 h-12 mx-auto mb-2 opacity-50" />
             <p>No sets yet. Add your first set to get started!</p>
           </div>
+        )}
+
+        {!activeSession.completed && (
+          <button
+            onClick={() => { setEditingSet(null); setShowSetModal(true) }}
+            className="mt-4 w-full bg-gray-900 dark:bg-white text-white dark:text-black rounded-full py-3 font-semibold shadow-sm hover:opacity-90 transition-opacity"
+          >
+            + Add Set
+          </button>
         )}
       </div>
 
@@ -293,10 +330,14 @@ const WorkoutPage = () => {
         </button>
       )}
 
-      {/* Set Modal */}
+
       {showSetModal && !activeSession.completed && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-sm max-h-[90vh] overflow-y-auto">
+          <div
+            className="bg-white dark:bg-black rounded-lg p-6 w-full max-w-md max-h-[80dvh] overflow-y-auto overscroll-contain pb-safe shadow-2xl shadow-black/60 ring-1 ring-gray-200 dark:ring-white/10"
+            style={{ transform: 'translateZ(0)' }}
+          >
+
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
               {editingSet ? 'Edit Set' : 'Add Set'}
             </h3>
@@ -306,14 +347,63 @@ const WorkoutPage = () => {
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Reps
               </label>
-              <input
-                type="number"
-                min="0"
-                max="50"
-                value={currentSet.reps}
-                onChange={(e) => setCurrentSet(prev => ({ ...prev, reps: parseInt(e.target.value) || 0 }))}
-                className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-              />
+              <div className="relative">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={String(currentSet.reps)}
+                  onFocus={(e) => scrollIntoViewIfNeeded(e.target as HTMLElement)}
+                  onChange={(e) => {
+                    const raw = e.target.value
+                    const digitsOnly = raw.replace(/\D/g, '')
+                    const normalized = digitsOnly.replace(/^0+(?=\d)/, '')
+                    const num = parseInt(normalized, 10)
+                    setCurrentSet(prev => ({
+                      ...prev,
+                      reps: Number.isFinite(num) ? Math.min(50, Math.max(0, num)) : 0
+                    }))
+                  }}
+                  className="w-full pr-10 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col items-center gap-0.5">
+                  <button
+                    type="button"
+                    aria-label="Increase reps"
+                    onClick={() => setCurrentSet(prev => ({ ...prev, reps: Math.min(50, prev.reps + 1) }))}
+                    className="w-4 h-4 rounded bg-gray-500/40 dark:bg-gray-500/40 text-gray-900 dark:text-gray-100 hover:bg-gray-500/60 transition grid place-items-center border border-gray-400/40 dark:border-gray-500/40"
+                  >
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <polyline points="6 15 12 9 18 15" />
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="Decrease reps"
+                    onClick={() => setCurrentSet(prev => ({ ...prev, reps: Math.max(0, prev.reps - 1) }))}
+                    className="w-4 h-4 rounded bg-gray-500/40 dark:bg-gray-500/40 text-gray-900 dark:text-gray-100 hover:bg-gray-500/60 transition grid place-items-center border border-gray-400/40 dark:border-gray-500/40"
+                  >
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <polyline points="6 9 12 15 18 9" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <div className="mt-2 flex flex-wrap justify-center gap-1.5">
+                {[2,4,6,8,10].map((val) => {
+                  const selected = currentSet.reps === val
+                  return (
+                    <button
+                      type="button"
+                      key={val}
+                      onClick={() => setCurrentSet(prev => ({ ...prev, reps: val }))}
+                      className={(selected ? "bg-blue-600 text-white" : "bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-gray-100") + " rounded-full px-3.5 py-1.5 text-sm"}
+                    >
+                      {val}
+                    </button>
+                  )
+                })}
+              </div>
             </div>
 
             {/* Weight (for weighted exercises) */}
@@ -323,13 +413,40 @@ const WorkoutPage = () => {
                   Weight (kg)
                 </label>
                 <input
-                  type="number"
-                  min="0"
-                  step="0.5"
-                  value={currentSet.weight}
-                  onChange={(e) => setCurrentSet(prev => ({ ...prev, weight: parseFloat(e.target.value) || 0 }))}
-                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  type="text"
+                  inputMode="decimal"
+                  pattern="[0-9]*[.]?[0-9]*"
+                  value={String(currentSet.weight)}
+                  onFocus={(e) => scrollIntoViewIfNeeded(e.target as HTMLElement)}
+                  onChange={(e) => {
+                    const raw = e.target.value
+                    const sanitized = raw.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1')
+                    const normalized = sanitized.startsWith('0') && !sanitized.startsWith('0.')
+                      ? sanitized.replace(/^0+(?=\d)/, '')
+                      : sanitized
+                    const num = parseFloat(normalized)
+                    setCurrentSet(prev => ({
+                      ...prev,
+                      weight: Number.isFinite(num) ? Math.min(200, Math.max(0, parseFloat(num.toFixed(1)))) : 0
+                    }))
+                  }}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
+                <div className="mt-2 flex flex-wrap justify-center gap-1.5">
+                  {[2.5,5,7.5,10].map((val) => {
+                    const selected = currentSet.weight === val
+                    return (
+                      <button
+                        type="button"
+                        key={val}
+                        onClick={() => setCurrentSet(prev => ({ ...prev, weight: val }))}
+                        className={(selected ? "bg-blue-600 text-white" : "bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-gray-100") + " rounded-full px-3.5 py-1.5 text-sm"}
+                      >
+                        {val}
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
             )}
 
@@ -340,32 +457,65 @@ const WorkoutPage = () => {
                   Band Resistance (kg)
                 </label>
                 <input
-                  type="number"
-                  min="0"
-                  step="0.5"
-                  value={currentSet.bandResistance}
-                  onChange={(e) => setCurrentSet(prev => ({ ...prev, bandResistance: parseFloat(e.target.value) || 0 }))}
-                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  type="text"
+                  inputMode="decimal"
+                  pattern="[0-9]*[.]?[0-9]*"
+                  value={String(currentSet.bandResistance)}
+                  onFocus={(e) => scrollIntoViewIfNeeded(e.target as HTMLElement)}
+                  onChange={(e) => {
+                    const raw = e.target.value
+                    const digitsOnly = raw.replace(/[^\d.]/g, '')
+                    const normalized = digitsOnly.replace(/^0+(?=\d)/, '')
+                    const num = parseFloat(normalized)
+                    setCurrentSet(prev => ({
+                      ...prev,
+                      bandResistance: Number.isFinite(num) ? Math.min(100, Math.max(0, num)) : 0
+                    }))
+                  }}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
+                <div className="mt-2 flex flex-wrap justify-center gap-1.5">
+                  {[10,15,20,25,30,35].map((val) => {
+                    const selected = currentSet.bandResistance === val
+                    return (
+                      <button
+                        type="button"
+                        key={val}
+                        onClick={() => setCurrentSet(prev => ({ ...prev, bandResistance: val }))}
+                        className={(selected ? "bg-blue-600 text-white" : "bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-gray-100") + " rounded-full px-3.5 py-1.5 text-sm"}
+                      >
+                        {val}
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
             )}
 
-            {/* Proximity to Failure */}
+            {/* RPE (Proximity to Failure) */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Proximity to Failure (1-10)
-              </label>
-              <input
-                type="range"
-                min="1"
-                max="10"
-                step="0.5"
-                value={currentSet.proximityToFailure}
-                onChange={(e) => setCurrentSet(prev => ({ ...prev, proximityToFailure: parseFloat(e.target.value) }))}
-                className="w-full"
-              />
-              <div className="text-center text-sm text-gray-600 dark:text-gray-400 mt-1">
-                {currentSet.proximityToFailure}/10
+              <div className="text-sm font-medium text-gray-700 dark:text-gray-300 text-center mb-2">RPE</div>
+              <div className="rounded-full bg-gray-200 dark:bg-gray-800 px-4 py-3 w-full flex items-center justify-between" role="radiogroup" aria-label="RPE">
+                {[6,7,7.5,8,8.5,9,9.5,10].map((val) => {
+                  const selected = currentSet.proximityToFailure === val
+                  return (
+                    <button
+                      type="button"
+                      key={val}
+                      role="radio"
+                      aria-checked={selected}
+                      onClick={() => setCurrentSet(prev => ({ ...prev, proximityToFailure: val }))}
+                      className={
+                        (selected
+                          ? "bg-blue-600 text-white"
+                          : "text-gray-800 dark:text-gray-200") +
+                        " rounded-full px-3 py-1.5 text-sm"
+                      }
+                    >
+                      {val}
+                    </button>
+                  )
+                })}
               </div>
             </div>
 
@@ -375,29 +525,54 @@ const WorkoutPage = () => {
                 Rest Time (seconds)
               </label>
               <input
-                type="number"
-                min="0"
-                max="600"
-                step="15"
-                value={currentSet.restTime}
-                onChange={(e) => setCurrentSet(prev => ({ ...prev, restTime: parseInt(e.target.value) || 0 }))}
-                className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                value={String(currentSet.restTime)}
+                onFocus={(e) => scrollIntoViewIfNeeded(e.target as HTMLElement)}
+                onChange={(e) => {
+                  const raw = e.target.value
+                  const digitsOnly = raw.replace(/\D/g, '')
+                  const normalized = digitsOnly.replace(/^0+(?=\d)/, '')
+                  const num = parseInt(normalized, 10)
+                  setCurrentSet(prev => ({
+                    ...prev,
+                    restTime: Number.isFinite(num) ? Math.min(600, Math.max(0, num)) : 0
+                  }))
+                }}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {[30,60,90,120].map((sec) => {
+                  const selected = currentSet.restTime === sec
+                  const label = sec === 60 ? "1m" : sec === 120 ? "2m" : `${sec}s`
+                  return (
+                    <button
+                      type="button"
+                      key={sec}
+                      onClick={() => setCurrentSet(prev => ({ ...prev, restTime: sec }))}
+                      className={(selected ? "bg-blue-600 text-white" : "bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-gray-100") + " rounded-full px-3.5 py-1.5 text-sm"}
+                    >
+                      {label}
+                    </button>
+                  )
+                })}
+              </div>
             </div>
 
             <div className="flex gap-3">
               <button
                 onClick={() => setShowSetModal(false)}
-                className="flex-1 px-4 py-2 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={addSet}
                 disabled={currentSet.reps === 0}
-                className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-md transition-colors"
+                className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                {editingSet ? 'Update' : 'Add'}
+                Done
               </button>
             </div>
           </div>
