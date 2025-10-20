@@ -1,16 +1,17 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Dumbbell, Clock, TrendingUp, CalendarDays } from 'lucide-react'
+import { Plus, Dumbbell, Clock, TrendingUp, CalendarDays, Zap } from 'lucide-react'
 import { useStore } from '@/store'
 import type { WorkoutSession, ExerciseType, ExerciseVariation, ExerciseSet } from '@/types/index'
 import { toast } from 'sonner'
 
 const HomePage = () => {
   const navigate = useNavigate()
-  const { sessions, setActiveSession } = useStore()
+  const { sessions, setActiveSession, saveSession } = useStore()
   const [showNewSessionModal, setShowNewSessionModal] = useState(false)
   const [selectedExercise, setSelectedExercise] = useState<ExerciseType>('normal')
   const [selectedVariation, setSelectedVariation] = useState<ExerciseVariation>('bodyweight')
+  const [showQuickSession, setShowQuickSession] = useState(false)
 
   const recentSessions = sessions
     .filter(s => s.completed)
@@ -58,6 +59,32 @@ const HomePage = () => {
     }
 
     return typeNames[type] + variationNames[variation]
+  }
+
+  const createQuickSession = (reps: number) => {
+    const quickSession: WorkoutSession = {
+      id: Date.now().toString(),
+      date: new Date(),
+      exerciseType: 'normal',
+      variation: 'bodyweight',
+      sets: [{
+        id: '1',
+        reps,
+        weight: 0,
+        bandResistance: 0,
+        proximityToFailure: 6,
+        restTime: 0,
+        completedAt: new Date()
+      }],
+      totalReps: reps,
+      completed: true,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
+
+    saveSession(quickSession)
+    setShowQuickSession(false)
+    toast.success(`Quick session completed! ${reps} reps added 💪`)
   }
 
   return (
@@ -113,6 +140,42 @@ const HomePage = () => {
           </div>
           <div className="text-2xl font-bold text-gray-900 dark:text-white">{todaySessionsCount}</div>
           <div className="text-sm text-gray-600 dark:text-gray-400">Completed Sessions</div>
+        </div>
+      </div>
+
+      {/* Quick Session */}
+      <div className="mb-4">
+        <div 
+          className={`bg-gray-100 dark:bg-gray-800 rounded-lg transition-all duration-200 ${
+            showQuickSession ? 'p-4' : 'p-3'
+          }`}
+        >
+          <button
+            onClick={() => setShowQuickSession(!showQuickSession)}
+            className="w-full flex items-center justify-center text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
+          >
+            <Zap className="w-4 h-4 mr-2" />
+            <span className="font-medium">Quick Session</span>
+          </button>
+          
+          {showQuickSession && (
+            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <div className="text-sm text-gray-600 dark:text-gray-400 text-center mb-3">
+                Select reps for a quick bodyweight session
+              </div>
+              <div className="flex flex-wrap justify-center gap-1">
+                 {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13].map((reps) => (
+                   <button
+                     key={reps}
+                     onClick={() => createQuickSession(reps)}
+                     className="rounded-full px-3.5 py-1.5 text-sm tabular-nums bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 border border-gray-200 dark:border-gray-600 transition-colors"
+                   >
+                     {reps}
+                   </button>
+                 ))}
+               </div>
+            </div>
+          )}
         </div>
       </div>
 

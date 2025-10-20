@@ -495,7 +495,7 @@ const WorkoutPage = () => {
             {/* RPE (Proximity to Failure) */}
             <div className="mb-4">
               <div className="text-sm font-medium text-gray-700 dark:text-gray-300 text-center mb-2">RPE</div>
-              <div className="rounded-full bg-gray-200 dark:bg-gray-800 px-4 py-3 w-full flex items-center justify-between" role="radiogroup" aria-label="RPE">
+              <div className="rounded-full bg-gray-200 dark:bg-gray-800 px-4 py-3 w-full grid grid-cols-8 items-center justify-items-center gap-x-2" role="radiogroup" aria-label="RPE">
                 {[6,7,7.5,8,8.5,9,9.5,10].map((val) => {
                   const selected = currentSet.proximityToFailure === val
                   return (
@@ -509,7 +509,7 @@ const WorkoutPage = () => {
                         (selected
                           ? "bg-blue-600 text-white"
                           : "text-gray-800 dark:text-gray-200") +
-                        " rounded-full px-3 py-1.5 text-sm"
+                        " rounded-full px-3 py-1.5 text-sm tabular-nums"
                       }
                     >
                       {val}
