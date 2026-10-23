@@ -32,10 +32,10 @@ const SettingsPage = () => {
   const exportData = () => {
     try {
       const data = {
-        sessions: JSON.parse(localStorage.getItem('pullups_sessions') || '[]'),
-        records: JSON.parse(localStorage.getItem('pullups_records') || '[]'),
-        settings: JSON.parse(localStorage.getItem('pullups_settings') || '{}'),
-        activeSession: JSON.parse(localStorage.getItem('pullups_active_session') || 'null')
+        sessions: JSON.parse(localStorage.getItem('pullup_sessions') || '[]'),
+        records: JSON.parse(localStorage.getItem('pullup_records') || '[]'),
+        settings: JSON.parse(localStorage.getItem('pullup_settings') || '{}'),
+        activeSession: JSON.parse(localStorage.getItem('pullup_active_session') || 'null')
       }
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
       const url = URL.createObjectURL(blob)
@@ -56,10 +56,10 @@ const SettingsPage = () => {
     try {
       const text = await file.text()
       const data = JSON.parse(text)
-      localStorage.setItem('pullups_sessions', JSON.stringify(data.sessions || []))
-      localStorage.setItem('pullups_records', JSON.stringify(data.records || []))
-      localStorage.setItem('pullups_settings', JSON.stringify(data.settings || {}))
-      localStorage.setItem('pullups_active_session', JSON.stringify(data.activeSession || null))
+      localStorage.setItem('pullup_sessions', JSON.stringify(data.sessions || []))
+      localStorage.setItem('pullup_records', JSON.stringify(data.records || []))
+      localStorage.setItem('pullup_settings', JSON.stringify(data.settings || {}))
+      localStorage.setItem('pullup_active_session', JSON.stringify(data.activeSession || null))
       toast.success('Data imported successfully')
       window.location.reload()
     } catch (error) {
